@@ -1,4 +1,12 @@
 node_modules
 
-# sst
-.sst
+# build output
+dist
+
+# env
+.env
+.env.*
+!.env.example
+
+# typescript build info
+*.tsbuildinfo

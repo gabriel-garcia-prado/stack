@@ -3,4 +3,7 @@ import { factory } from '@factory'
 
 import { auth } from './auth'
 
-export const authHandler = factory.createHandlers(async (c) => auth(database)(c.req.raw))
+// Instantiate the better-auth handler once at startup rather than per request.
+const handleAuthRequest = auth(database)
+
+export const authHandler = factory.createHandlers((c) => handleAuthRequest(c.req.raw))

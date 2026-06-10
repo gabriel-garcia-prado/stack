@@ -1,5 +1,4 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres from 'postgres'
+import { drizzle } from 'drizzle-orm/bun-sql'
 
 import { getAuth } from '../../auth.config'
 
@@ -8,4 +7,4 @@ import { getAuth } from '../../auth.config'
  *
  * @internal
  */
-export const auth = getAuth(drizzle(postgres('')))
+export const auth = getAuth(drizzle.mock())

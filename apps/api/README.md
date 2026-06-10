@@ -2,69 +2,80 @@
 
 <div align="center">
 
-A modern API backend built with **TypeScript**, **Hono**, and **PostgreSQL**.
+A type-safe API backend built with **Bun**, **Hono**, **Drizzle**, and **PostgreSQL**.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Bun](https://img.shields.io/badge/Bun-1-black)](https://bun.sh/)
 [![Hono](https://img.shields.io/badge/Hono-4-blue)](https://hono.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)](https://www.postgresql.org/)
-[![Drizzle](https://img.shields.io/badge/Drizzle-0.33-green)](https://orm.drizzle.team/)
-[![Better Auth](https://img.shields.io/badge/Better_Auth-1.1-green)](https://github.com/your-org/better-auth)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
+[![Drizzle](https://img.shields.io/badge/Drizzle-0.45-green)](https://orm.drizzle.team/)
+[![Better Auth](https://img.shields.io/badge/Better_Auth-1.6-green)](https://www.better-auth.com/)
 
 </div>
 
 ## 📚 Overview
 
-This project uses [Hono](https://hono.dev/) for the API framework, [Drizzle](https://orm.drizzle.team/) for database operations, and [Purify-ts](https://gigobyte.github.io/purify/) for functional programming patterns.
+The backend is a [Hono](https://hono.dev/) app running on the Bun runtime. It uses
+[Drizzle ORM](https://orm.drizzle.team/) over Bun's native `bun:sql` driver for
+PostgreSQL, [Zod](https://zod.dev/) for request validation,
+[Better Auth](https://www.better-auth.com/) for authentication, and
+[neverthrow](https://github.com/supermacro/neverthrow) for typed, functional error
+handling — no exceptions thrown across business logic.
 
 ## ✨ Features
 
-- ⚡️ Fast development with Bun runtime
-- 🔐 Type-safe API endpoints with Hono
-- 📦 PostgreSQL with Drizzle ORM
+- ⚡️ Bun runtime with hot reload
+- 🔐 End-to-end type-safe endpoints (Hono RPC — the web app infers `AppType`)
+- 📦 PostgreSQL via Drizzle ORM (`bun:sql`)
 - 🛡️ Request validation with Zod
-- 🚦 Functional error handling with Purify-ts
-- 🧪 TypeScript-first codebase
-- 🧩 Modular architecture
-- 🔒 Built-in authentication with Better Auth
+- 🚦 Typed error handling with neverthrow (`Result` / `ResultAsync`)
+- 🔒 Email + password auth with Better Auth (cookie sessions)
+- 🧩 Modular, dependency-injected architecture that's trivial to unit test
+- 🌐 Serves the built web app from `./public` (single-image deploy)
 
 ## 🚀 Quick Start
 
+> Most of the time you'll run everything from the repo root with `bun dev`. The steps
+> below are for working on the API in isolation.
+
 ### Prerequisites
 
-- [Bun](https://bun.sh/) (>=1.0.0)
+- [Bun](https://bun.sh/) (>= 1.0)
 - [Docker](https://www.docker.com/) for PostgreSQL
-- [Node.js](https://nodejs.org/) (>=18)
 
-### 1. Install Dependencies
+### 1. Install dependencies (from the repo root)
 
 ```sh
 bun install
 ```
 
-### 2. Launch Local Database
+### 2. Start PostgreSQL
 
 ```sh
-docker run --name my-postgres -e POSTGRES_PASSWORD=my_password -d -p 5432:5432 postgres
+bun db:up        # from the repo root (docker compose)
 ```
 
-### 3. Configure Environment Variables
+### 3. Configure environment
 
 ```sh
 cp .env.example .env
 ```
 
-Required variables:
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable                     | Description               | Example                                                    |
+| ---------------------------- | ------------------------- | ---------------------------------------------------------- |
 | `DATABASE_CONNECTION_STRING` | PostgreSQL connection URL | `postgresql://postgres:my_password@localhost:5432/postgres` |
-| `BETTER_AUTH_SECRET` | Secret key for auth | `random_string` |
-| `BETTER_AUTH_URL` | Auth service URL | `http://localhost:3000` |
-| `TRUSTED_ORIGINS` | Allowed CORS origins | `http://localhost:5173` |
+| `BETTER_AUTH_SECRET`         | Secret for signing sessions | `openssl rand -base64 32`                                |
+| `BETTER_AUTH_URL`            | Auth server base URL      | `http://localhost:3000`                                    |
+| `TRUSTED_ORIGINS`            | Comma-separated CORS origins | `http://localhost:5173`                                 |
 
-### 4. Migrate Database Schema
+Environment variables are validated **once at startup** with Zod
+(`src/types/environment.ts`); the process exits early with a clear message if any
+required value is missing.
+
+### 4. Apply migrations & run
 
 ```sh
-bun db:push
+bun db:migrate
+bun dev
 ```
 
 ## 📦 Project Structure
@@ -72,167 +83,152 @@ bun db:push
 ```
 apps/api/
 ├── src/
-│   ├── modules/        # Feature modules (auth, hello-world)
-│   ├── middleware/     # Custom middleware
-│   ├── types/          # Type definitions
-│   ├── lib/            # Utilities
-│   └── index.ts        # App entry point
+│   ├── modules/              # Feature modules (auth, hello-world)
+│   │   └── <name>/
+│   │       ├── <name>.ts          # Pure business logic (DI + neverthrow)
+│   │       ├── <name>.handler.ts  # HTTP wiring (validation + response)
+│   │       └── <name>.test.ts     # Unit tests (mocked dependencies)
+│   ├── middleware/           # cors, logger, validator
+│   ├── lib/                  # app-response, test helpers
+│   ├── types/                # environment (Zod), errors (AppError union)
+│   ├── database.ts           # Drizzle client (bun:sql)
+│   ├── factory.ts            # Hono factory + typed context (logger)
+│   ├── migrate.ts            # Programmatic migration runner
+│   └── index.ts              # App entry point + route wiring
 ├── drizzle/
-│   ├── migrations/    # Database migrations
-│   ├── schema/        # Database schema
-│   └── utils/         # Schema utilities
-└── sst-infra.ts       # Infrastructure config
+│   ├── migrations/           # Generated SQL migrations
+│   ├── schema/               # Table definitions (auth, hello-world)
+│   └── utils/                # Shared column helpers, auth schema config
+├── auth.config.ts            # Better Auth configuration
+├── drizzle.config.ts         # drizzle-kit config
+└── Dockerfile                # Production image (API + web build)
 ```
 
-## 🛠️ Development
+## 🛠️ Scripts
 
-### Available Scripts
+| Command             | Description                                          |
+| ------------------- | ---------------------------------------------------- |
+| `bun dev`           | Run migrations, then start the server with hot reload |
+| `bun test`          | Run unit tests (`bun test`)                          |
+| `bun lint`          | Lint + format check (Biome)                          |
+| `bun typecheck`     | Type-check with `tsc --noEmit`                       |
+| `bun db:generate`   | Generate a migration from schema changes             |
+| `bun db:migrate`    | Apply pending migrations                             |
+| `bun auth:generate` | Regenerate the Better Auth Drizzle schema            |
 
-| Command             | Description              |
-| ------------------- | ------------------------ |
-| `bun dev`           | Start development server |
-| `bun test`          | Run tests                |
-| `bun lint`          | Lint code                |
-| `bun db:studio`     | Open Drizzle Studio      |
-| `bun db:push`       | Push schema changes      |
-| `bun db:pull`       | Pull schema changes      |
-| `bun db:generate`   | Generate migrations      |
-| `bun auth:generate` | Generate auth schema     |
+## 🧱 Core concepts
 
-## Core Concepts
+### 1. Business logic — pure, dependency-injected functions
 
-### Code Organization
-
-#### Business Logic
-
-- **Purpose**: Encapsulates core business logic
-- **Location**: `src/modules/*/module.ts`
-- **Pattern**: Pure functions with explicit dependencies and Either types
-
-Example:
+Located at `src/modules/<name>/<name>.ts`. Each is a curried function that takes its
+dependencies, then its input, and returns a `ResultAsync`. No I/O is hard-coded, so
+the logic is pure and easy to test.
 
 ```ts
-import { EitherAsync } from 'purify-ts'
+import type { DependencyError } from '@errors'
+import type { ResultAsync } from 'neverthrow'
+
+type Dependencies = {
+  generateId: () => string
+  saveName: (id: string, name: string) => ResultAsync<void, DependencyError>
+}
+
+type Input = Readonly<{ name: string; age: number }>
+type Output = ResultAsync<{ message: string }, DependencyError>
 
 export const helloWorld =
   (dependencies: Dependencies) =>
   (input: Input): Output =>
-    dependencies.saveName(input.id, input.name).map(() => ({
+    dependencies.saveName(dependencies.generateId(), input.name).map(() => ({
       message: `Hello ${input.name}, you are ${input.age} years old`
     }))
 ```
 
-#### Handlers
+### 2. Handlers — validation, dependency wiring, response
 
-- **Purpose**: HTTP request handling
-- **Location**: `src/modules/*/handler.ts`
-- **Pattern**: Request validation, dependency injection and response formatting
-
-Example:
+Located at `src/modules/<name>/<name>.handler.ts`. Handlers validate the request,
+inject real dependencies (the database, etc.), and hand the `Result` to
+`appResponse`, which maps it to a typed JSON response.
 
 ```ts
+import { appResponse } from '@appResponse'
 import { factory } from '@factory'
 import { queryValidator } from '@validator'
 
 export const helloWorldHandler = factory.createHandlers(queryValidator(schema), async (c) => {
   const input = c.req.valid('query')
-  return c.var.appResponse(await helloWorld(dependencies)(input))
+  return appResponse(c, await helloWorld(dependencies)(input))
 })
 ```
 
-## Technologies
+> `appResponse(c, result)` is called **directly** (not via `c.var`) so Hono's RPC
+> client can infer the concrete success type for each route.
 
-### Core Libraries
+### 3. Typed errors
 
-#### Hono Framework
-
-Modern, lightweight API framework:
+All failures are values, not exceptions. `src/types/errors.ts` defines the union:
 
 ```ts
-import { Hono } from 'hono'
-import { z } from 'zod'
-
-const app = new Hono()
-app.get('/hello', async (c) => {
-  return c.json({ message: 'Hello World' })
-})
+type AppError = DependencyError | ValidationError | InternalError
 ```
 
-#### Drizzle ORM
+`appResponse` exhaustively maps each variant to a status code
+(`ValidationError` → 400, `DependencyError` / `InternalError` → 500) and logs it.
 
-Type-safe database operations:
+### 4. Path aliases
+
+Configured in the root `tsconfig.json`:
+
+| Alias           | Points to                          |
+| --------------- | ---------------------------------- |
+| `@factory`      | `src/factory.ts`                   |
+| `@appResponse`  | `src/lib/app-response.ts`          |
+| `@validator`    | `src/middleware/validator.ts`      |
+| `@errors`       | `src/types/errors.ts`              |
+| `@database`     | `src/database.ts`                  |
+| `@environment`  | `src/types/environment.ts`         |
+| `@dbSchema`     | `drizzle/schema/index.ts`          |
+| `@testHelpers`  | `src/lib/test.ts`                  |
+
+## 🧪 Testing
+
+Because business logic is dependency-injected, tests mock the dependencies and assert
+on the returned `Result` — no database required. Type-safe mock helpers live in
+`src/lib/test.ts` (`MockDependencies` / `MockInput`).
 
 ```ts
-import { db } from '@/lib/db'
-import { users } from '@/db/schema'
+import { describe, expect, mock, test } from 'bun:test'
+import type { MockDependencies, MockInput } from '@testHelpers'
+import { okAsync } from 'neverthrow'
 
-const user = await db.query.users.findFirst({
-  where: eq(users.id, userId)
+import { helloWorld } from './hello-world'
+
+const mockDependencies: MockDependencies<typeof helloWorld> = (overrides) => ({
+  generateId: mock(() => 'fixed-id'),
+  saveName: mock(() => okAsync(undefined)),
+  ...overrides
 })
 ```
 
-### Better Auth
+Run with `bun test`.
 
-Better Auth is our authentication solution that provides secure, session-based authentication with the following features:
+## 🔒 Authentication
 
-- 🔒 HTTP-only cookie session management
-- 🔑 Secure password hashing with Argon2
-- 🚫 CSRF protection
-- 📨 Email verification
-- 🔄 Refresh token rotation
-- 🌐 Multi-tenant support
+[Better Auth](https://www.better-auth.com/) is configured in `auth.config.ts` with the
+Drizzle adapter (`provider: 'pg'`) and email + password enabled. Its routes are mounted
+under `/api/auth/*` in `src/index.ts`, and its tables live in `drizzle/schema/auth.ts`.
 
-Example usage:
+- Regenerate the auth schema after upgrading Better Auth: `bun auth:generate`
+- `trustedOrigins` is driven by the `TRUSTED_ORIGINS` env var (also used by CORS).
 
-```ts
-import { auth } from '@/lib/auth'
+## 🗄️ Database & migrations
 
-// Login endpoint
-app.post('/login', async (c) => {
-  const session = await auth.createSession({
-    email,
-    password,
-    tenant: 'default'
-  })
+Schema is defined in `drizzle/schema/` (e.g. `helloWorld` plus the Better Auth tables).
+Shared column helpers (`createdAt` / `updatedAt`) live in `drizzle/utils/columns.ts`.
 
-  return c.json(
-    {
-      user: session.user
-    },
-    {
-      cookies: session.cookies
-    }
-  )
-})
-
-// Protected route
-app.use('/api/*', auth.middleware())
+```sh
+bun db:generate   # diff the schema → new SQL migration in drizzle/migrations
+bun db:migrate    # apply pending migrations
 ```
 
-#### Purify-ts
-
-Functional error handling:
-
-```ts
-import { Either } from 'purify-ts'
-
-const result = await Either.try(async () => {
-  // Your code here
-})
-```
-
-## 📝 ESLint Configuration
-
-For production applications, enable type-aware lint rules:
-
-```js
-// eslint.config.js
-export default tseslint.config({
-  languageOptions: {
-    parserOptions: {
-      project: ['./tsconfig.json'],
-      tsconfigRootDir: import.meta.dirname
-    }
-  }
-})
-```
+`bun dev` runs `src/migrate.ts` automatically before starting the server.

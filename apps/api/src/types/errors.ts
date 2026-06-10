@@ -16,3 +16,5 @@ export type InternalError = {
   message: string
   error: unknown
 }
+
+export type AppError = DependencyError | ValidationError | InternalError

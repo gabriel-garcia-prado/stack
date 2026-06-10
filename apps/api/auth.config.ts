@@ -1,7 +1,8 @@
+import { environment } from '@environment'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
-export const getAuth = (database: Parameters<typeof drizzleAdapter>['0']): ReturnType<typeof betterAuth> =>
+export const getAuth = (database: Parameters<typeof drizzleAdapter>['0']) =>
   betterAuth({
     database: drizzleAdapter(database, {
       provider: 'pg'
@@ -9,5 +10,5 @@ export const getAuth = (database: Parameters<typeof drizzleAdapter>['0']): Retur
     emailAndPassword: {
       enabled: true
     },
-    trustedOrigins: process.env.TRUSTED_ORIGINS.split(',')
+    trustedOrigins: environment.TRUSTED_ORIGINS
   })

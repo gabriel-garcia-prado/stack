@@ -1,31 +1,30 @@
+import { appResponse } from '@appResponse'
 import { database } from '@database'
 import { helloWorld as helloWorldTable } from '@dbSchema'
 import { factory } from '@factory'
 import { queryValidator } from '@validator'
-import { EitherAsync } from 'purify-ts'
+import { ResultAsync } from 'neverthrow'
 import { z } from 'zod'
 
 import { helloWorld } from './hello-world'
 
 const schema = z.object({
-  id: z.string().uuid(),
   name: z.string(),
   age: z.coerce.number()
 })
 
 const dependencies = {
+  generateId: () => crypto.randomUUID(),
   saveName: (id: string, name: string) =>
-    EitherAsync(() => database.insert(helloWorldTable).values({ id, name }).execute())
-      .mapLeft((error) => ({
-        type: 'DependencyError' as const,
-        message: `${error}`,
-        dependency: 'db',
-        input: { id, name }
-      }))
-      .void()
+    ResultAsync.fromPromise(database.insert(helloWorldTable).values({ id, name }).execute(), (error) => ({
+      type: 'DependencyError' as const,
+      message: `${error}`,
+      dependency: 'db',
+      input: { id, name }
+    })).map(() => undefined)
 }
 
 export const helloWorldHandler = factory.createHandlers(queryValidator(schema), async (c) => {
   const input = c.req.valid('query')
-  return c.var.appResponse(await helloWorld(dependencies)(input))
+  return appResponse(c, await helloWorld(dependencies)(input))
 })

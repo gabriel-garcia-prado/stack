@@ -15,13 +15,13 @@ type Properties = {
 }
 
 export function LoginForm({ onSubmit }: Properties) {
-  const form = useForm<Login>({
-    onSubmit: async (data) => {
-      onSubmit(data.value)
-    },
+  const form = useForm({
     defaultValues: {
       email: '',
       password: ''
+    } as Login,
+    onSubmit: async ({ value }) => {
+      onSubmit(value)
     }
   })
 

@@ -1,47 +1,48 @@
-/* eslint-disable functional/no-return-void */
-import { MockDependencies, MockInput } from '@testHelpers'
 import { describe, expect, mock, test } from 'bun:test'
-import { EitherAsync, Left, Right } from 'purify-ts'
+import type { MockDependencies, MockInput } from '@testHelpers'
+import { errAsync, okAsync } from 'neverthrow'
 
 import { helloWorld } from './hello-world'
 
+const ID = 'b16ed4bb-2c3f-478f-8b1d-1139467daf4d'
+
 const mockDependencies: MockDependencies<typeof helloWorld> = (overrides) => ({
-  saveName: mock((_: string) => EitherAsync.liftEither(Right({})).void()),
+  generateId: mock(() => ID),
+  saveName: mock((_id: string, _name: string) => okAsync(undefined)),
   ...overrides
 })
 
 const mockInput: MockInput<typeof helloWorld> = (overrides) => ({
-  id: 'b16ed4bb-2c3f-478f-8b1d-1139467daf4d',
   name: 'Alice',
   age: 42,
   ...overrides
 })
 
 describe('helloWorld', () => {
-  test('logs the name and age', async () => {
+  test('saves the name under a generated id', async () => {
     const dependencies = mockDependencies()
     const input = mockInput()
 
     await helloWorld(dependencies)(input)
 
-    expect(dependencies.saveName).toHaveBeenCalledWith('b16ed4bb-2c3f-478f-8b1d-1139467daf4d', 'Alice')
+    expect(dependencies.saveName).toHaveBeenCalledWith(ID, 'Alice')
   })
 
   test('return dependency error', async () => {
     const error = {
       type: 'DependencyError' as const,
-      message: 'logger error',
-      dependency: 'logger',
+      message: 'db error',
+      dependency: 'db',
       input: 'Alice'
     }
     const dependencies = mockDependencies({
-      saveName: mock((_) => EitherAsync.liftEither(Left(error)))
+      saveName: mock((_id: string, _name: string) => errAsync(error))
     })
     const input = mockInput()
 
     const response = await helloWorld(dependencies)(input)
 
-    expect(dependencies.saveName).toHaveBeenCalledWith('b16ed4bb-2c3f-478f-8b1d-1139467daf4d', 'Alice')
-    expect(response.extract()).toEqual(error)
+    expect(dependencies.saveName).toHaveBeenCalledWith(ID, 'Alice')
+    expect(response._unsafeUnwrapErr()).toEqual(error)
   })
 })

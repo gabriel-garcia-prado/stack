@@ -1,6 +1,7 @@
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
+import { ErrorBoundary } from '@/components/error-boundary'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Button } from '@/components/ui/button'
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from '@/components/ui/menubar'
@@ -38,4 +39,4 @@ const Root = () => {
   )
 }
 
-export const Route = createRootRoute({ component: Root })
+export const Route = createRootRoute({ component: Root, errorComponent: ErrorBoundary })

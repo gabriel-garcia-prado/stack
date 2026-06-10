@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { v4 } from 'uuid'
 
 import reactLogo from '@/assets/react.svg'
 import viteLogo from '@/assets/vite.svg'
@@ -14,7 +13,7 @@ const Index = () => {
 
   const client = useApiClient()
   const mutation = useMutation({
-    mutationFn: (data: Readonly<{ id: string; name: string; age: string }>) =>
+    mutationFn: (data: Readonly<{ name: string; age: string }>) =>
       client['hello-world'].$get({ query: data }).then(async (response) => {
         if (response.ok) {
           return await response.json()
@@ -41,8 +40,8 @@ const Index = () => {
         </CardHeader>
         <CardContent className="flex justify-between">
           <Button onClick={() => setCount((c) => c + 1)}>count is {count}</Button>
-          <Button onClick={() => mutation.mutate({ id: v4(), name: 'name', age: '27' })}>
-            Hono RPC: {mutation.isSuccess ? mutation.data.message : 'Click me'}
+          <Button disabled={mutation.isPending} onClick={() => mutation.mutate({ name: 'name', age: '27' })}>
+            Hono RPC: {mutation.isPending ? 'Loading…' : mutation.isSuccess ? mutation.data.message : 'Click me'}
           </Button>
         </CardContent>
         <CardFooter>

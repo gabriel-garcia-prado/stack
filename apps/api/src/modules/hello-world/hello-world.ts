@@ -1,21 +1,21 @@
-import { DependencyError } from '@errors'
-import { EitherAsync } from 'purify-ts'
+import type { DependencyError } from '@errors'
+import type { ResultAsync } from 'neverthrow'
 
 type Dependencies = {
-  saveName: (id: string, name: string) => EitherAsync<DependencyError, void>
+  generateId: () => string
+  saveName: (id: string, name: string) => ResultAsync<void, DependencyError>
 }
 
 type Input = Readonly<{
-  id: string
   name: string
   age: number
 }>
 
-type Output = EitherAsync<DependencyError, { message: string }>
+type Output = ResultAsync<{ message: string }, DependencyError>
 
 export const helloWorld =
   (dependencies: Dependencies) =>
   (input: Input): Output =>
-    dependencies.saveName(input.id, input.name).map(() => ({
+    dependencies.saveName(dependencies.generateId(), input.name).map(() => ({
       message: `Hello ${input.name}, you are ${input.age} years old`
     }))

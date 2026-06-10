@@ -1,13 +1,3 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "@factory": ["./src/factory.ts"],
-      "@validator": ["./src/middleware/validator.ts"],
-      "@errors": ["./src/types/errors.ts"],
-      "@database": ["./src/database.ts"],
-      "@testHelpers": ["./src/lib/test.ts"],
-      "@dbSchema": ["./drizzle/schema/index.ts"]
-    }
-  }
+  "extends": "../../tsconfig.json"
 }

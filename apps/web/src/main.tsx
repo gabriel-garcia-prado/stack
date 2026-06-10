@@ -1,6 +1,6 @@
 import './main.css'
 
-import { AppType } from '@stack/api'
+import type { AppType } from '@stack/api'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { hc } from 'hono/client'

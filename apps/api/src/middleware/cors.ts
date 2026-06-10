@@ -1,10 +1,10 @@
+import { environment } from '@environment'
 import { factory } from '@factory'
 import { cors } from 'hono/cors'
 
-export const corsMiddleware = factory.createMiddleware(async (c, next) => {
-  const corsMiddlewareHandler = cors({
-    origin: process.env.TRUSTED_ORIGINS.split(','),
-    credentials: true
-  })
-  return corsMiddlewareHandler(c, next)
+const corsMiddlewareHandler = cors({
+  origin: environment.TRUSTED_ORIGINS,
+  credentials: true
 })
+
+export const corsMiddleware = factory.createMiddleware(corsMiddlewareHandler)

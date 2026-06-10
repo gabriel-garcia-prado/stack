@@ -2,18 +2,25 @@
   "name": "my-monorepo",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
-    "dev": "bun --filter '*' dev",
-    "lint": "bun --filter '*' lint",
-    "test": "bun --filter '*' test"
-  },
-  "dependencies": {
-    "sst": "3.16.0"
+    "dev": "docker compose up -d postgres && bun --filter '*' dev",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose stop postgres",
+    "db:generate": "bun --filter '@stack/api' db:generate",
+    "db:migrate": "bun --filter '@stack/api' db:migrate",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "format": "biome format --write",
+    "typecheck": "bun --filter '*' typecheck",
+    "test": "bun --filter '*' test",
+    "check": "bun run typecheck && bun run lint && bun run test",
+    "up": "docker compose up --build",
+    "down": "docker compose down"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.147"
+    "@biomejs/biome": "^2.2.0",
+    "typescript": "^6.0.3"
   }
 }

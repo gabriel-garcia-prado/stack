@@ -1,4 +1,4 @@
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import type { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
 import { getAuth } from '../../../auth.config'
 

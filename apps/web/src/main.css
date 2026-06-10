@@ -1,8 +1,10 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @plugin 'tailwindcss-animate';
 
-@variant dark (&:is(.dark *));
+@variant dark
+(
+&:is(.dark *));
 
 @theme {
   --radius-lg: var(--radius);

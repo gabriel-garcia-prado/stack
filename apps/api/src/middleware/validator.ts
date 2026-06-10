@@ -1,15 +1,13 @@
 import { factory } from '@factory'
 import { zValidator } from '@hono/zod-validator'
-import { Left } from 'purify-ts'
-import { Schema } from 'zod'
+import type { Schema } from 'zod'
 
 export const queryValidator = <T>(schema: Schema<T>) =>
   factory.createMiddleware(
     zValidator('query', schema, (result, c) => {
       if (!result.success) {
-        return c.var.appResponse(
-          Left({ type: 'ValidationError' as const, message: 'Failed to validate', input: result.data })
-        )
+        c.var.logger('error', 'invalid query')(result.error)
+        return c.json({ message: 'Failed to validate' }, 400)
       }
       c.var.logger('info', 'valid query')(result.data)
     })

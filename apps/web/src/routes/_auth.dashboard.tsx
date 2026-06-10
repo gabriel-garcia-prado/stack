@@ -9,5 +9,5 @@ const Dashboard = () => {
 }
 
 export const Route = createFileRoute('/_auth/dashboard')({
-  component: Dashboard,
+  component: Dashboard
 })
