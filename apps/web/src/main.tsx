@@ -13,7 +13,7 @@ import { routeTree } from '@/routeTree.gen'
 
 const router = createRouter({ routeTree })
 const queryClient = new QueryClient()
-const apiClient = hc<AppType>(import.meta.env.VITE_APP_API_URL)
+const apiClient = hc<AppType>(window.location.origin)
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 createRoot(document.querySelector('#root')!).render(

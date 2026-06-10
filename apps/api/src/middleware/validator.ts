@@ -1,8 +1,8 @@
 import { factory } from '@factory'
 import { zValidator } from '@hono/zod-validator'
-import type { Schema } from 'zod'
+import type { ZodType } from 'zod'
 
-export const queryValidator = <T>(schema: Schema<T>) =>
+export const queryValidator = <T>(schema: ZodType<T>) =>
   factory.createMiddleware(
     zValidator('query', schema, (result, c) => {
       if (!result.success) {

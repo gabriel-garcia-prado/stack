@@ -9,6 +9,5 @@ export const getAuth = (database: Parameters<typeof drizzleAdapter>['0']) =>
     }),
     emailAndPassword: {
       enabled: true
-    },
-    trustedOrigins: environment.TRUSTED_ORIGINS
+    }
   })

@@ -1,4 +1,3 @@
-import { appResponse } from '@appResponse'
 import { database } from '@database'
 import { helloWorld as helloWorldTable } from '@dbSchema'
 import { factory } from '@factory'
@@ -26,5 +25,5 @@ const dependencies = {
 
 export const helloWorldHandler = factory.createHandlers(queryValidator(schema), async (c) => {
   const input = c.req.valid('query')
-  return appResponse(c, await helloWorld(dependencies)(input))
+  return c.var.appResponse(await helloWorld(dependencies)(input))
 })

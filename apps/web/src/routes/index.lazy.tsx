@@ -14,7 +14,7 @@ const Index = () => {
   const client = useApiClient()
   const mutation = useMutation({
     mutationFn: (data: Readonly<{ name: string; age: string }>) =>
-      client['hello-world'].$get({ query: data }).then(async (response) => {
+      client.api['hello-world'].$get({ query: data }).then(async (response) => {
         if (response.ok) {
           return await response.json()
         } else {

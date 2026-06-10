@@ -10,5 +10,10 @@ export default defineConfig({
     alias: {
       '@': `${import.meta.dirname}/src`
     }
+  },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3000'
+    }
   }
 })

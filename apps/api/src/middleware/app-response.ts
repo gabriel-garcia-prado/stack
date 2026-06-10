@@ -1,16 +1,11 @@
 import type { AppError } from '@errors'
-import type { CustomEnvironment } from '@factory'
+import type { AppResponse, CustomEnvironment } from '@factory'
+import { factory } from '@factory'
 import type { Context } from 'hono'
 import type { Result } from 'neverthrow'
 
-/**
- * Maps a `Result` to a typed JSON response, logging along the way.
- *
- * Called directly from handlers (rather than via a context variable) so that
- * hono's RPC client can infer the concrete success type per route.
- */
-export const appResponse = <T>(c: Context<CustomEnvironment>, input: Result<T, AppError>) =>
-  input.match(
+export const appResponse = <T>(c: Context<CustomEnvironment>, input: Result<T, AppError>): AppResponse<T> =>
+  (input.match(
     (data) => {
       c.var.logger('success', 'appResponse')(data)
       return c.json(data, 200)
@@ -33,4 +28,9 @@ export const appResponse = <T>(c: Context<CustomEnvironment>, input: Result<T, A
         }
       }
     }
-  )
+  ) as unknown as AppResponse<T>)
+
+export const appResponseMiddleware = factory.createMiddleware(async (c, next) => {
+  c.set('appResponse', <T>(input: Result<T, AppError>) => appResponse(c, input))
+  await next()
+})
