@@ -15,7 +15,7 @@ const Auth = () => {
       </div>
     )
   }
-  if (error || session === null || new Date(session.session.expiresAt).getTime() < Date.now()) {
+  if (error || session === null) {
     return (
       <div className="p-5">
         <LoginForm onSubmit={client.signIn.email} />

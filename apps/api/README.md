@@ -65,7 +65,7 @@ cp .env.example .env
 | `DATABASE_CONNECTION_STRING` | PostgreSQL connection URL | `postgresql://postgres:my_password@localhost:5432/postgres` |
 | `BETTER_AUTH_SECRET`         | Secret for signing sessions | `openssl rand -base64 32`                                |
 | `BETTER_AUTH_URL`            | Auth server base URL      | `http://localhost:3000`                                    |
-| `TRUSTED_ORIGINS`            | Comma-separated CORS origins | `http://localhost:5173`                                 |
+| `TRUSTED_ORIGINS`            | Extra origins trusted by Better Auth (comma-separated, optional) | `http://localhost:5173`             |
 
 Environment variables are validated **once at startup** with Zod
 (`src/types/environment.ts`); the process exits early with a clear message if any
@@ -83,22 +83,22 @@ bun dev
 ```
 apps/api/
 ├── src/
-│   ├── modules/              # Feature modules (auth, hello-world)
+│   ├── modules/              # Feature modules (auth, hello-world, me)
 │   │   └── <name>/
 │   │       ├── <name>.ts          # Pure business logic (DI + neverthrow)
-│   │       ├── <name>.handler.ts  # HTTP wiring (validation + response)
+│   │       ├── <name>.handler.ts  # HTTP wiring (sub-app: validation + response)
 │   │       └── <name>.test.ts     # Unit tests (mocked dependencies)
-│   ├── middleware/           # cors, logger, validator
-│   ├── lib/                  # app-response, test helpers
+│   ├── middleware/           # logger, app-response, validator, require-auth
+│   ├── lib/                  # test helpers
 │   ├── types/                # environment (Zod), errors (AppError union)
 │   ├── database.ts           # Drizzle client (bun:sql)
-│   ├── factory.ts            # Hono factory + typed context (logger)
-│   ├── migrate.ts            # Programmatic migration runner
-│   └── index.ts              # App entry point + route wiring
+│   ├── factory.ts            # Hono factory + typed context (logger, appResponse)
+│   ├── index.ts              # App entry point + route wiring
+│   └── index.test.ts         # Integration tests + RPC type guardrails
 ├── drizzle/
 │   ├── migrations/           # Generated SQL migrations
 │   ├── schema/               # Table definitions (auth, hello-world)
-│   └── utils/                # Shared column helpers, auth schema config
+│   └── utils/                # Shared column helpers, auth schema config, migrate runner
 ├── auth.config.ts            # Better Auth configuration
 ├── drizzle.config.ts         # drizzle-kit config
 └── Dockerfile                # Production image (API + web build)
@@ -114,6 +114,7 @@ apps/api/
 | `bun typecheck`     | Type-check with `tsc --noEmit`                       |
 | `bun db:generate`   | Generate a migration from schema changes             |
 | `bun db:migrate`    | Apply pending migrations                             |
+| `bun db:seed`       | Seed dev data (idempotent; also runs in `bun dev`)   |
 | `bun auth:generate` | Regenerate the Better Auth Drizzle schema            |
 
 ## 🧱 Core concepts
@@ -125,8 +126,9 @@ dependencies, then its input, and returns a `ResultAsync`. No I/O is hard-coded,
 the logic is pure and easy to test.
 
 ```ts
-import type { DependencyError } from '@errors'
 import type { ResultAsync } from 'neverthrow'
+
+import type { DependencyError } from '../../types/errors'
 
 type Dependencies = {
   generateId: () => string
@@ -146,23 +148,28 @@ export const helloWorld =
 
 ### 2. Handlers — validation, dependency wiring, response
 
-Located at `src/modules/<name>/<name>.handler.ts`. Handlers validate the request,
-inject real dependencies (the database, etc.), and hand the `Result` to
-`appResponse`, which maps it to a typed JSON response.
+Located at `src/modules/<name>/<name>.handler.ts`. Each module exports a Hono
+sub-app that validates the request, injects real dependencies (the database,
+etc.), and hands the `Result` to `c.var.appResponse`, which maps it to a typed
+JSON response. The sub-app is mounted in `src/index.ts` with
+`.route('/api/<name>', <name>Routes)`.
 
 ```ts
-import { appResponse } from '@appResponse'
-import { factory } from '@factory'
-import { queryValidator } from '@validator'
+import { factory } from '../../factory'
+import { validator } from '../../middleware/validator'
 
-export const helloWorldHandler = factory.createHandlers(queryValidator(schema), async (c) => {
-  const input = c.req.valid('query')
-  return appResponse(c, await helloWorld(dependencies)(input))
-})
+export const helloWorldRoutes = factory
+  .createApp()
+  .post('/', validator('json', schema), async (c) =>
+    c.var.appResponse(await helloWorld(dependencies)(c.req.valid('json')))
+  )
 ```
 
-> `appResponse(c, result)` is called **directly** (not via `c.var`) so Hono's RPC
-> client can infer the concrete success type for each route.
+> `validator(...)` returns zValidator's middleware unwrapped, so the validated
+> input types and the success body type both flow into the RPC client. Never
+> wrap it in `createMiddleware` — that erases the route's type information.
+> Compile-time assertions in `src/index.test.ts` fail the build if this
+> inference ever breaks.
 
 ### 3. Typed errors
 
@@ -175,20 +182,12 @@ type AppError = DependencyError | ValidationError | InternalError
 `appResponse` exhaustively maps each variant to a status code
 (`ValidationError` → 400, `DependencyError` / `InternalError` → 500) and logs it.
 
-### 4. Path aliases
+### 4. Protected routes
 
-Configured in the root `tsconfig.json`:
-
-| Alias           | Points to                          |
-| --------------- | ---------------------------------- |
-| `@factory`      | `src/factory.ts`                   |
-| `@appResponse`  | `src/lib/app-response.ts`          |
-| `@validator`    | `src/middleware/validator.ts`      |
-| `@errors`       | `src/types/errors.ts`              |
-| `@database`     | `src/database.ts`                  |
-| `@environment`  | `src/types/environment.ts`         |
-| `@dbSchema`     | `drizzle/schema/index.ts`          |
-| `@testHelpers`  | `src/lib/test.ts`                  |
+`src/middleware/require-auth.ts` validates the session cookie server-side via
+`auth.api.getSession` and returns 401 otherwise; downstream handlers read the
+user from `c.var.user`. See `src/modules/me/me.handler.ts` for an example —
+any client-side gating in the web app is UX only, the API is the real guard.
 
 ## 🧪 Testing
 
@@ -198,8 +197,9 @@ on the returned `Result` — no database required. Type-safe mock helpers live i
 
 ```ts
 import { describe, expect, mock, test } from 'bun:test'
-import type { MockDependencies, MockInput } from '@testHelpers'
 import { okAsync } from 'neverthrow'
+
+import type { MockDependencies, MockInput } from '../../lib/test'
 
 import { helloWorld } from './hello-world'
 
@@ -210,7 +210,9 @@ const mockDependencies: MockDependencies<typeof helloWorld> = (overrides) => ({
 })
 ```
 
-Run with `bun test`.
+Run with `bun test`. `src/index.test.ts` adds integration tests that exercise the
+real middleware chain through `app.request(...)` (no database needed), plus
+compile-time assertions that the RPC client's request/response types stay inferred.
 
 ## 🔒 Authentication
 
@@ -219,16 +221,22 @@ Drizzle adapter (`provider: 'pg'`) and email + password enabled. Its routes are 
 under `/api/auth/*` in `src/index.ts`, and its tables live in `drizzle/schema/auth.ts`.
 
 - Regenerate the auth schema after upgrading Better Auth: `bun auth:generate`
-- `trustedOrigins` is driven by the `TRUSTED_ORIGINS` env var (also used by CORS).
+- `secret`, `baseURL` and `trustedOrigins` come from the validated environment
+  (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `TRUSTED_ORIGINS`).
+- In dev, `drizzle/utils/seed.ts` creates a known user through Better Auth's own
+  API (`dev@example.com` / `password1234`) so you can sign in immediately. It is
+  idempotent, refuses to run with `NODE_ENV=production`, and is not part of the
+  production container CMD.
 
 ## 🗄️ Database & migrations
 
-Schema is defined in `drizzle/schema/` (e.g. `helloWorld` plus the Better Auth tables).
-Shared column helpers (`createdAt` / `updatedAt`) live in `drizzle/utils/columns.ts`.
+Schema is defined in `drizzle/schema/` (e.g. `hello_world` plus the Better Auth tables).
+Column names derive from the TS property names via `casing: 'snake_case'`. Shared
+column helpers (`createdAt` / `updatedAt`) live in `drizzle/utils/columns.ts`.
 
 ```sh
 bun db:generate   # diff the schema → new SQL migration in drizzle/migrations
 bun db:migrate    # apply pending migrations
 ```
 
-`bun dev` runs `src/migrate.ts` automatically before starting the server.
+`bun dev` runs `drizzle/utils/migrate.ts` automatically before starting the server.

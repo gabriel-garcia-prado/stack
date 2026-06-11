@@ -11,7 +11,6 @@ type ApiClientProviderProperties = Readonly<{
 
 const ApiClientContext = createContext<Client | null>(null)
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useApiClient = () => {
   const client = useContext(ApiClientContext)
   if (!client) {

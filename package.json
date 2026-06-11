@@ -1,5 +1,5 @@
 {
-  "name": "my-monorepo",
+  "name": "stack",
   "private": true,
   "workspaces": [
     "apps/*"
@@ -10,6 +10,7 @@
     "db:down": "docker compose stop postgres",
     "db:generate": "bun --filter '@stack/api' db:generate",
     "db:migrate": "bun --filter '@stack/api' db:migrate",
+    "db:seed": "bun --filter '@stack/api' db:seed",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "format": "biome format --write",

@@ -1,16 +1,16 @@
-import type { AppError } from '@errors'
-import type { AppResponse, CustomEnvironment } from '@factory'
-import { factory } from '@factory'
 import type { Context } from 'hono'
 import type { Result } from 'neverthrow'
+import type { AppResponse, CustomEnvironment } from '../factory'
+import { factory } from '../factory'
+import type { AppError } from '../types/errors'
 
 export const appResponse = <T>(c: Context<CustomEnvironment>, input: Result<T, AppError>): AppResponse<T> =>
-  (input.match(
-    (data) => {
+  input.match(
+    (data): AppResponse<T> => {
       c.var.logger('success', 'appResponse')(data)
       return c.json(data, 200)
     },
-    (error) => {
+    (error): AppResponse<T> => {
       c.var.logger('error', 'appError')(error)
       switch (error.type) {
         case 'DependencyError': {
@@ -28,7 +28,7 @@ export const appResponse = <T>(c: Context<CustomEnvironment>, input: Result<T, A
         }
       }
     }
-  ) as unknown as AppResponse<T>)
+  )
 
 export const appResponseMiddleware = factory.createMiddleware(async (c, next) => {
   c.set('appResponse', <T>(input: Result<T, AppError>) => appResponse(c, input))

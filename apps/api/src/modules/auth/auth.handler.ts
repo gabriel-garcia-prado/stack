@@ -1,12 +1,5 @@
-import { database } from '@database'
-import type { AppResponse } from '@factory'
-import { factory } from '@factory'
-
+import { factory } from '../../factory'
 import { auth } from './auth'
 
-// Instantiate the better-auth handler once at startup rather than per request.
-const handleAuthRequest = auth(database)
-
-export const authHandler = factory.createHandlers(
-  (c) => handleAuthRequest(c.req.raw) as unknown as Promise<AppResponse>
-)
+/** Better Auth handles everything under /api/auth/* (sign-in, sign-up, session, ...). */
+export const authRoutes = factory.createApp().on(['GET', 'POST'], '/*', (c) => auth.handler(c.req.raw))

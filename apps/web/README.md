@@ -53,17 +53,7 @@ React client.
 bun install
 ```
 
-### 2. Configure environment
-
-```sh
-cp .env.example .env
-```
-
-| Variable           | Description                              | Default                 |
-| ------------------ | ---------------------------------------- | ----------------------- |
-| `VITE_APP_API_URL` | API base URL (used by the RPC + auth client) | `http://localhost:3000` |
-
-### 3. Start the dev server
+### 2. Start the dev server
 
 ```sh
 bun dev
@@ -111,9 +101,11 @@ apps/web/
 
 ### Type-safe API calls (Hono RPC)
 
-`main.tsx` creates the client with `hc<AppType>(...)` and provides it via context.
+`main.tsx` creates the client with `hc<AppType>(window.location.origin)` and provides
+it via context — the app always talks to its own origin (Vite proxies `/api` to the API
+in dev; in production the API serves the built app), so no env var is needed.
 Components read it with `useApiClient()` and call endpoints as typed methods —
-no manual types, no codegen.
+no manual types, no codegen. Both the request body and the response are inferred.
 
 ```tsx
 import { useMutation } from '@tanstack/react-query'
@@ -122,8 +114,8 @@ import { useApiClient } from '@/components/api-client-provider'
 
 const client = useApiClient()
 const mutation = useMutation({
-  mutationFn: (data: { name: string; age: string }) =>
-    client['hello-world'].$get({ query: data }).then((r) => r.json())
+  mutationFn: (data: { name: string; age: number }) =>
+    client.api['hello-world'].$post({ json: data }).then((r) => r.json())
 })
 ```
 

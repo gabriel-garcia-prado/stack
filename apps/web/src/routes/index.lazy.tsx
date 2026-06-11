@@ -13,8 +13,8 @@ const Index = () => {
 
   const client = useApiClient()
   const mutation = useMutation({
-    mutationFn: (data: Readonly<{ name: string; age: string }>) =>
-      client.api['hello-world'].$get({ query: data }).then(async (response) => {
+    mutationFn: (data: Readonly<{ name: string; age: number }>) =>
+      client.api['hello-world'].$post({ json: data }).then(async (response) => {
         if (response.ok) {
           return await response.json()
         } else {
@@ -40,7 +40,7 @@ const Index = () => {
         </CardHeader>
         <CardContent className="flex justify-between">
           <Button onClick={() => setCount((c) => c + 1)}>count is {count}</Button>
-          <Button disabled={mutation.isPending} onClick={() => mutation.mutate({ name: 'name', age: '27' })}>
+          <Button disabled={mutation.isPending} onClick={() => mutation.mutate({ name: 'name', age: 27 })}>
             Hono RPC: {mutation.isPending ? 'Loading…' : mutation.isSuccess ? mutation.data.message : 'Click me'}
           </Button>
         </CardContent>

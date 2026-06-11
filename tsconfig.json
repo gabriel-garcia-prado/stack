@@ -1,23 +1,16 @@
 {
   "compilerOptions": {
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "module": "esnext",
     "target": "esnext",
+    "lib": ["ESNext"],
     "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "skipLibCheck": true,
-    "paths": {
-      "@factory": ["./apps/api/src/factory.ts"],
-      "@validator": ["./apps/api/src/middleware/validator.ts"],
-      "@errors": ["./apps/api/src/types/errors.ts"],
-      "@database": ["./apps/api/src/database.ts"],
-      "@environment": ["./apps/api/src/types/environment.ts"],
-      "@testHelpers": ["./apps/api/src/lib/test.ts"],
-      "@dbSchema": ["./apps/api/drizzle/schema/index.ts"],
-      "@/*": ["./apps/web/src/*"]
-    }
+    "skipLibCheck": true
   }
 }

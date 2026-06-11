@@ -1,9 +1,15 @@
 import { z } from 'zod'
 
 export const environmentSchema = z.object({
-  DATABASE_CONNECTION_STRING: z.string(),
-  BETTER_AUTH_SECRET: z.string(),
-  BETTER_AUTH_URL: z.string(),
+  DATABASE_CONNECTION_STRING: z.url(),
+  BETTER_AUTH_SECRET: z.string().min(1),
+  BETTER_AUTH_URL: z.url(),
+  // Comma-separated list of extra origins allowed to call the auth endpoints
+  // (e.g. the Vite dev server). Same-origin requests are always allowed.
+  TRUSTED_ORIGINS: z
+    .string()
+    .optional()
+    .transform((value) => (value ? value.split(',').map((origin) => origin.trim()) : []))
 })
 
 export type Environment = z.infer<typeof environmentSchema>

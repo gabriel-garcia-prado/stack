@@ -1,4 +1,5 @@
 import { useForm } from '@tanstack/react-form'
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,17 +12,19 @@ type Login = {
 }
 
 type Properties = {
-  onSubmit: (data: Readonly<Login>) => void
+  onSubmit: (data: Readonly<Login>) => Promise<{ error: { message?: string } | null }>
 }
 
 export function LoginForm({ onSubmit }: Properties) {
+  const [errorMessage, setErrorMessage] = useState<string>()
   const form = useForm({
     defaultValues: {
       email: '',
       password: ''
     } as Login,
     onSubmit: async ({ value }) => {
-      onSubmit(value)
+      const { error } = await onSubmit(value)
+      setErrorMessage(error ? (error.message ?? 'Login failed') : undefined)
     }
   })
 
@@ -75,6 +78,11 @@ export function LoginForm({ onSubmit }: Properties) {
                 )}
               />
             </div>
+            {errorMessage ? (
+              <p className="text-sm text-destructive" role="alert">
+                {errorMessage}
+              </p>
+            ) : undefined}
             <Button type="submit" className="w-full">
               Login
             </Button>

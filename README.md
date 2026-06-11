@@ -34,10 +34,12 @@ vendor lock-in:
 ├── apps/
 │   ├── web/              # React frontend (Vite)
 │   └── api/              # Hono backend API (Bun) — also serves the web build
+├── .github/workflows/   # CI (typecheck + lint + test on every push/PR)
 ├── biome.json           # Lint + format config
+├── CLAUDE.md            # Conventions for AI agents working on this repo
 ├── docker-compose.yml   # Local + portable production stack
 ├── package.json         # Bun workspaces + root scripts
-└── tsconfig.json        # Shared TS config + path aliases
+└── tsconfig.json        # Shared TS config
 ```
 
 This is a [Bun workspaces](https://bun.sh/docs/install/workspaces) monorepo. The web app
@@ -63,7 +65,6 @@ bun install
 ```sh
 cp .env.example .env                  # Postgres password + auth secret (Docker Compose)
 cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
 ```
 
 Generate a strong auth secret with `openssl rand -base64 32`.
@@ -74,8 +75,11 @@ Generate a strong auth secret with `openssl rand -base64 32`.
 bun dev
 ```
 
-`bun dev` starts Postgres (Docker), applies pending migrations, then runs the API
-and web with hot reload.
+`bun dev` starts Postgres (Docker), applies pending migrations, seeds a dev user,
+then runs the API and web with hot reload. Sign in with:
+
+- **Email:** `dev@example.com`
+- **Password:** `password1234`
 
 Visit:
 
@@ -91,6 +95,7 @@ Visit:
 | `bun db:down`     | Stop the Postgres container                  |
 | `bun db:generate` | Generate a migration from schema changes     |
 | `bun db:migrate`  | Apply pending migrations                     |
+| `bun db:seed`     | Seed dev data (dev user; runs in `bun dev`)  |
 | `bun typecheck`   | Type-check all packages (no emit)            |
 | `bun lint`        | Lint + format check (Biome)                  |
 | `bun lint:fix`    | Apply safe lint fixes + format               |
@@ -102,7 +107,9 @@ Visit:
 
 ## 🔑 Environment variables
 
-The root `.env` feeds **Docker Compose**; each app has its own `.env` for local dev.
+The root `.env` feeds **Docker Compose**; the API has its own `.env` for local dev.
+The web app needs no env vars — it talks to the API on its own origin (Vite proxies
+`/api` in dev; the API serves the built app in production).
 
 | Variable                     | Used by        | Description                                  |
 | ---------------------------- | -------------- | -------------------------------------------- |
@@ -110,8 +117,7 @@ The root `.env` feeds **Docker Compose**; each app has its own `.env` for local 
 | `BETTER_AUTH_SECRET`         | compose, api   | Secret for signing sessions (required)       |
 | `DATABASE_CONNECTION_STRING` | api            | PostgreSQL connection URL                    |
 | `BETTER_AUTH_URL`            | api            | Auth server base URL (default `:3000`)       |
-| `TRUSTED_ORIGINS`            | api            | Comma-separated CORS origins (default `:5173`) |
-| `VITE_APP_API_URL`           | web            | API base URL for the RPC + auth client       |
+| `TRUSTED_ORIGINS`            | api            | Extra origins trusted by Better Auth, comma-separated (default `:5173`) |
 
 ## 🐳 Run the whole stack locally
 

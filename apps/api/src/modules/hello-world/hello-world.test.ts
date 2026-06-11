@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test'
-import type { MockDependencies, MockInput } from '@testHelpers'
 import { errAsync, okAsync } from 'neverthrow'
+import type { MockDependencies, MockInput } from '../../lib/test'
 
 import { helloWorld } from './hello-world'
 

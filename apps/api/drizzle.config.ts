@@ -9,6 +9,7 @@ export default defineConfig({
   schema: './drizzle/schema',
   dialect: 'postgresql',
   out: './drizzle/migrations',
+  casing: 'snake_case',
   dbCredentials: {
     url
   }

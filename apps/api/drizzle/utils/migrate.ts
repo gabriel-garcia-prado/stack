@@ -5,9 +5,10 @@
  * Retries the initial connection because Postgres may still be starting up
  * when this process launches.
  */
-import { environment } from '@environment'
+
 import { drizzle } from 'drizzle-orm/bun-sql'
 import { migrate } from 'drizzle-orm/bun-sql/migrator'
+import { environment } from '../../src/types/environment'
 
 const MAX_ATTEMPTS = 10
 const RETRY_DELAY_MS = 2000

@@ -1,8 +1,9 @@
 import { timestamp } from 'drizzle-orm/pg-core'
 
+// Column names (created_at, updated_at) come from `casing: 'snake_case'`.
 export const timestamps = {
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
+  createdAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp()
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date())

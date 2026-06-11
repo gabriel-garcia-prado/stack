@@ -1,5 +1,10 @@
-import * as schema from '@dbSchema'
-import { environment } from '@environment'
 import { drizzle } from 'drizzle-orm/bun-sql'
 
-export const database = drizzle({ connection: environment.DATABASE_CONNECTION_STRING, schema })
+import * as schema from '../drizzle/schema'
+import { environment } from './types/environment'
+
+export const database = drizzle({
+  connection: environment.DATABASE_CONNECTION_STRING,
+  schema,
+  casing: 'snake_case'
+})

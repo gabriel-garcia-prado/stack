@@ -1,21 +1,25 @@
 // Validate environment variables once, eagerly, before anything else loads.
-import '@environment'
+import './types/environment'
 
-import { factory } from '@factory'
 import { serveStatic } from 'hono/bun'
+import { secureHeaders } from 'hono/secure-headers'
 
+import { factory } from './factory'
 import { appResponseMiddleware } from './middleware/app-response'
 import { loggerMiddleware } from './middleware/logger'
-import { authHandler } from './modules/auth/auth.handler'
-import { helloWorldHandler } from './modules/hello-world/hello-world.handler'
+import { authRoutes } from './modules/auth/auth.handler'
+import { helloWorldRoutes } from './modules/hello-world/hello-world.handler'
+import { meRoutes } from './modules/me/me.handler'
 
 const app = factory
   .createApp()
+  .use(secureHeaders())
   .use(loggerMiddleware)
   .use(appResponseMiddleware)
-  .get('/api/auth/*', ...authHandler)
-  .post('/api/auth/*', ...authHandler)
-  .get('/api/hello-world', ...helloWorldHandler)
+  .get('/health', (c) => c.json({ status: 'ok' }, 200))
+  .route('/api/auth', authRoutes)
+  .route('/api/hello-world', helloWorldRoutes)
+  .route('/api/me', meRoutes)
 
 // Capture the RPC type *before* the catch-all static handlers below. A
 // `.use('*', ...)` entry collapses Hono's route inference, which would strip

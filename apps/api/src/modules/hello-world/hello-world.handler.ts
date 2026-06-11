@@ -1,21 +1,21 @@
-import { database } from '@database'
-import { helloWorld as helloWorldTable } from '@dbSchema'
-import { factory } from '@factory'
-import { queryValidator } from '@validator'
 import { ResultAsync } from 'neverthrow'
 import { z } from 'zod'
 
+import { helloWorld as helloWorldTable } from '../../../drizzle/schema'
+import { database } from '../../database'
+import { factory } from '../../factory'
+import { validator } from '../../middleware/validator'
 import { helloWorld } from './hello-world'
 
 const schema = z.object({
   name: z.string(),
-  age: z.coerce.number()
+  age: z.number()
 })
 
 const dependencies = {
   generateId: () => crypto.randomUUID(),
   saveName: (id: string, name: string) =>
-    ResultAsync.fromPromise(database.insert(helloWorldTable).values({ id, name }).execute(), (error) => ({
+    ResultAsync.fromPromise(database.insert(helloWorldTable).values({ id, name }), (error) => ({
       type: 'DependencyError' as const,
       message: `${error}`,
       dependency: 'db',
@@ -23,7 +23,8 @@ const dependencies = {
     })).map(() => undefined)
 }
 
-export const helloWorldHandler = factory.createHandlers(queryValidator(schema), async (c) => {
-  const input = c.req.valid('query')
-  return c.var.appResponse(await helloWorld(dependencies)(input))
-})
+export const helloWorldRoutes = factory
+  .createApp()
+  .post('/', validator('json', schema), async (c) =>
+    c.var.appResponse(await helloWorld(dependencies)(c.req.valid('json')))
+  )
