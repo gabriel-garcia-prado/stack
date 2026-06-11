@@ -62,10 +62,11 @@ cp .env.example .env
 
 | Variable                     | Description               | Example                                                    |
 | ---------------------------- | ------------------------- | ---------------------------------------------------------- |
-| `DATABASE_CONNECTION_STRING` | PostgreSQL connection URL | `postgresql://postgres:my_password@localhost:5432/postgres` |
+| `POSTGRES_PASSWORD`          | Postgres password; assembled into the connection URL (must match the root `.env`) | `my_password`           |
 | `BETTER_AUTH_SECRET`         | Secret for signing sessions | `openssl rand -base64 32`                                |
 | `BETTER_AUTH_URL`            | Auth server base URL      | `http://localhost:3000`                                    |
 | `TRUSTED_ORIGINS`            | Extra origins trusted by Better Auth (comma-separated, optional) | `http://localhost:5173`             |
+| `DATABASE_CONNECTION_STRING` | Full connection URL; overrides the assembled one, optional | `postgresql://user:pass@host:5432/db`        |
 
 Environment variables are validated **once at startup** with Zod
 (`src/types/environment.ts`); the process exits early with a clear message if any

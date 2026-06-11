@@ -23,7 +23,8 @@ services:
     ports:
       - '3000:3000'
     environment:
-      DATABASE_CONNECTION_STRING: postgres://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_HOST: postgres
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-http://localhost:5173}

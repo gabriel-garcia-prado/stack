@@ -108,16 +108,18 @@ Visit:
 ## 🔑 Environment variables
 
 The root `.env` feeds **Docker Compose**; the API has its own `.env` for local dev.
-The web app needs no env vars — it talks to the API on its own origin (Vite proxies
-`/api` in dev; the API serves the built app in production).
+The API assembles its Postgres connection URL from `POSTGRES_PASSWORD` (and
+`POSTGRES_HOST`, defaulting to `localhost`), so the password is the one DB secret
+everywhere. The web app needs no env vars — it talks to the API on its own origin
+(Vite proxies `/api` in dev; the API serves the built app in production).
 
-| Variable                     | Used by        | Description                                  |
-| ---------------------------- | -------------- | -------------------------------------------- |
-| `POSTGRES_PASSWORD`          | compose        | Postgres password (required)                 |
-| `BETTER_AUTH_SECRET`         | compose, api   | Secret for signing sessions (required)       |
-| `DATABASE_CONNECTION_STRING` | api            | PostgreSQL connection URL                    |
-| `BETTER_AUTH_URL`            | api            | Auth server base URL (default `:3000`)       |
-| `TRUSTED_ORIGINS`            | api            | Extra origins trusted by Better Auth, comma-separated (default `:5173`) |
+| Variable                     | Used by         | Description                                  |
+| ---------------------------- | --------------- | -------------------------------------------- |
+| `POSTGRES_PASSWORD`          | compose, api    | Postgres password (required)                 |
+| `BETTER_AUTH_SECRET`         | compose, api    | Secret for signing sessions (required)       |
+| `BETTER_AUTH_URL`            | api             | Auth server base URL (default `:3000`)       |
+| `TRUSTED_ORIGINS`            | api             | Extra origins trusted by Better Auth, comma-separated (default `:5173`) |
+| `DATABASE_CONNECTION_STRING` | api (optional)  | Full connection URL; overrides the assembled one (managed/hosted DB) |
 
 ## 🐳 Run the whole stack locally
 

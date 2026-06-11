@@ -1,9 +1,5 @@
 import { defineConfig } from 'drizzle-kit'
-
-const url = process.env.DATABASE_CONNECTION_STRING
-if (!url) {
-  throw new Error('DATABASE_CONNECTION_STRING is required to run drizzle-kit')
-}
+import { environment } from '#environment'
 
 export default defineConfig({
   schema: './drizzle/schema',
@@ -11,6 +7,6 @@ export default defineConfig({
   out: './drizzle/migrations',
   casing: 'snake_case',
   dbCredentials: {
-    url
+    url: environment.DATABASE_CONNECTION_STRING
   }
 })
