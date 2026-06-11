@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [TanStackRouterVite(), react(), tailwindcss()],
+  plugins: [TanStackRouterVite({ tmpDir: 'node_modules/.tanstack/tmp' }), react(), tailwindcss()],
   resolve: {
     alias: {
       '@': `${import.meta.dirname}/src`
