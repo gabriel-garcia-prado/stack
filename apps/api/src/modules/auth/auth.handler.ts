@@ -1,4 +1,4 @@
-import { factory } from '../../factory'
+import { factory } from '#factory'
 import { auth } from './auth'
 
 /** Better Auth handles everything under /api/auth/* (sign-in, sign-up, session, ...). */

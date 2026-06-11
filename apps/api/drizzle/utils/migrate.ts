@@ -8,7 +8,7 @@
 
 import { drizzle } from 'drizzle-orm/bun-sql'
 import { migrate } from 'drizzle-orm/bun-sql/migrator'
-import { environment } from '../../src/types/environment'
+import { environment } from '#environment'
 
 const MAX_ATTEMPTS = 10
 const RETRY_DELAY_MS = 2000

@@ -18,6 +18,16 @@ The web app gets a fully typed RPC client by importing the API's `AppType` (`@st
 - **Protected endpoints use the `requireAuth` middleware** (`src/middleware/require-auth.ts`), which validates the
   session server-side. Client-side gating in the web app is UX only, never security.
 
+## Imports
+
+Inside `apps/api`, the shared infrastructure that every module exercises has a `#`-prefixed subpath alias declared in
+the `imports` field of `apps/api/package.json`: `#factory`, `#errors`, `#environment`, `#database` (also re-exports
+the drizzle schema tables), `#validator`, `#require-auth`, `#test`. Use these when building a new module; feature
+modules (like auth) and one-off files don't get aliases — import them relatively. Don't add tsconfig `paths` for API
+code — package imports are the one mechanism that works across Bun, tsc, and the esbuild-based CLIs, and they don't
+leak into the web app. The web app keeps its own `@/*` alias (declared in `apps/web/tsconfig.json` and
+`vite.config.ts`).
+
 ## API module layout
 
 Each feature lives in `apps/api/src/modules/<name>/`:

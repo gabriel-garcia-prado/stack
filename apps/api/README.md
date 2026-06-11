@@ -128,7 +128,7 @@ the logic is pure and easy to test.
 ```ts
 import type { ResultAsync } from 'neverthrow'
 
-import type { DependencyError } from '../../types/errors'
+import type { DependencyError } from '#errors'
 
 type Dependencies = {
   generateId: () => string
@@ -155,8 +155,8 @@ JSON response. The sub-app is mounted in `src/index.ts` with
 `.route('/api/<name>', <name>Routes)`.
 
 ```ts
-import { factory } from '../../factory'
-import { validator } from '../../middleware/validator'
+import { factory } from '#factory'
+import { validator } from '#validator'
 
 export const helloWorldRoutes = factory
   .createApp()
@@ -189,6 +189,33 @@ type AppError = DependencyError | ValidationError | InternalError
 user from `c.var.user`. See `src/modules/me/me.handler.ts` for an example —
 any client-side gating in the web app is UX only, the API is the real guard.
 
+### 5. Path aliases (package subpath imports)
+
+The modules everything imports get a `#`-prefixed alias, declared in the `imports`
+field of this package's `package.json` — a Node/Bun standard that Bun, tsc, esbuild
+(drizzle-kit, the Better Auth CLI) and editors all resolve natively, with no
+tsconfig `paths`:
+
+| Alias            | Points to                          |
+| ---------------- | ---------------------------------- |
+| `#factory`       | `src/factory.ts`                   |
+| `#errors`        | `src/types/errors.ts`              |
+| `#environment`   | `src/types/environment.ts`         |
+| `#database`      | `src/database.ts`                  |
+| `#validator`     | `src/middleware/validator.ts`      |
+| `#require-auth`  | `src/middleware/require-auth.ts`   |
+| `#test`          | `src/lib/test.ts`                  |
+
+`#database` also re-exports every table from `drizzle/schema`, so the client and the
+schema come from a single import: `import { database, helloWorld } from '#database'`.
+
+Because they're scoped to this package, they also resolve correctly when the web
+app typechecks `AppType` through `@stack/api`, and the web app cannot import them —
+no cross-app leaks. The aliases are exactly the infrastructure every new module
+exercises (factory + validator in handlers, errors in business logic, require-auth
+on protected routes, test helpers in tests); feature modules like auth don't get
+one — import them relatively.
+
 ## 🧪 Testing
 
 Because business logic is dependency-injected, tests mock the dependencies and assert
@@ -199,7 +226,7 @@ on the returned `Result` — no database required. Type-safe mock helpers live i
 import { describe, expect, mock, test } from 'bun:test'
 import { okAsync } from 'neverthrow'
 
-import type { MockDependencies, MockInput } from '../../lib/test'
+import type { MockDependencies, MockInput } from '#test'
 
 import { helloWorld } from './hello-world'
 

@@ -1,4 +1,4 @@
-import { factory } from '../factory'
+import { factory } from '#factory'
 
 export const loggerMiddleware = factory.createMiddleware(async (c, next) => {
   const start = Date.now()

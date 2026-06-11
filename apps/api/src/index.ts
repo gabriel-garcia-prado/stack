@@ -1,10 +1,10 @@
 // Validate environment variables once, eagerly, before anything else loads.
-import './types/environment'
+import '#environment'
 
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { factory } from './factory'
+import { factory } from '#factory'
 import { appResponseMiddleware } from './middleware/app-response'
 import { loggerMiddleware } from './middleware/logger'
 import { authRoutes } from './modules/auth/auth.handler'

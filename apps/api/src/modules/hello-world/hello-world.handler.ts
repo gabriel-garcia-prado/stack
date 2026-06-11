@@ -1,10 +1,8 @@
 import { ResultAsync } from 'neverthrow'
 import { z } from 'zod'
-
-import { helloWorld as helloWorldTable } from '../../../drizzle/schema'
-import { database } from '../../database'
-import { factory } from '../../factory'
-import { validator } from '../../middleware/validator'
+import { database, helloWorld as helloWorldTable } from '#database'
+import { factory } from '#factory'
+import { validator } from '#validator'
 import { helloWorld } from './hello-world'
 
 const schema = z.object({

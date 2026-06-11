@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
-import { environment } from './src/types/environment'
+import { environment } from '#environment'
 
 export const getAuth = (database: Parameters<typeof drizzleAdapter>['0']) =>
   betterAuth({

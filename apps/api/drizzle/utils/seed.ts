@@ -7,10 +7,8 @@
  * what sign-in expects.
  */
 import { eq } from 'drizzle-orm'
-
-import { database } from '../../src/database'
+import { database, user } from '#database'
 import { auth } from '../../src/modules/auth/auth'
-import { user } from '../schema'
 
 export const DEV_USER = {
   name: 'Dev User',

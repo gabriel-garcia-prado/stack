@@ -1,8 +1,8 @@
 import type { Context } from 'hono'
 import type { Result } from 'neverthrow'
-import type { AppResponse, CustomEnvironment } from '../factory'
-import { factory } from '../factory'
-import type { AppError } from '../types/errors'
+import type { AppError } from '#errors'
+import type { AppResponse, CustomEnvironment } from '#factory'
+import { factory } from '#factory'
 
 export const appResponse = <T>(c: Context<CustomEnvironment>, input: Result<T, AppError>): AppResponse<T> =>
   input.match(

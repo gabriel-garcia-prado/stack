@@ -1,5 +1,5 @@
 import type { ResultAsync } from 'neverthrow'
-import type { DependencyError } from '../../types/errors'
+import type { DependencyError } from '#errors'
 
 type Dependencies = {
   generateId: () => string

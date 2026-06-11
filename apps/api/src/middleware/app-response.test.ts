@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test'
 import { err, ok } from 'neverthrow'
-import type { AppError } from '../types/errors'
+import type { AppError } from '#errors'
 
 import { appResponse } from './app-response'
 

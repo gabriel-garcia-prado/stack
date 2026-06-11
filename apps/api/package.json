@@ -3,6 +3,15 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "imports": {
+    "#factory": "./src/factory.ts",
+    "#errors": "./src/types/errors.ts",
+    "#environment": "./src/types/environment.ts",
+    "#database": "./src/database.ts",
+    "#validator": "./src/middleware/validator.ts",
+    "#require-auth": "./src/middleware/require-auth.ts",
+    "#test": "./src/lib/test.ts"
+  },
   "scripts": {
     "dev": "bun run drizzle/utils/migrate.ts && bun run drizzle/utils/seed.ts && bun run --hot src/index.ts",
     "lint": "biome check",

@@ -4,7 +4,7 @@ import type { Context } from 'hono'
 import { err } from 'neverthrow'
 import type { ZodType, z } from 'zod'
 
-import type { CustomEnvironment } from '../factory'
+import type { CustomEnvironment } from '#factory'
 
 /**
  * Thin wrapper around zValidator that shapes validation failures as an

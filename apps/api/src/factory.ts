@@ -3,7 +3,7 @@ import { createFactory } from 'hono/factory'
 import type { JSONParsed } from 'hono/utils/types'
 import type { Result } from 'neverthrow'
 
-import type { AppError } from './types/errors'
+import type { AppError } from '#errors'
 
 type Logger = (type: 'log' | 'info' | 'success' | 'error', title: string) => (data: unknown) => void
 

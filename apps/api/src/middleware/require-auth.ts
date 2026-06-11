@@ -1,6 +1,5 @@
 import { createMiddleware } from 'hono/factory'
-
-import type { CustomEnvironment } from '../factory'
+import type { CustomEnvironment } from '#factory'
 import type { Session } from '../modules/auth/auth'
 import { auth } from '../modules/auth/auth'
 
